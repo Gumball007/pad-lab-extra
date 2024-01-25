@@ -1,0 +1,13 @@
+{
+  "name": "gateway",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "keywords": [],
+  "author": "Ana Corolețchi",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "express": "^4.17.21"
+  }
+}
