@@ -81,3 +81,7 @@ async def get_event_details(event_id: str):
         response = await client.get(url, params=params, headers=headers)
         
     return response.json()
+
+@app.get("/status")
+def read_status():
+    return {"status": "OK"}
