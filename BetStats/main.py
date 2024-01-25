@@ -8,7 +8,7 @@ API_KEY = os.getenv("API_KEY")
 
 app = FastAPI()
 
-# GET SPORTS
+# Get sports
 @app.get("/sports")
 async def get_sports():
 
@@ -24,7 +24,7 @@ async def get_sports():
         
     return response.json()
 
-# GET MARKETS
+# Get markets
 @app.get("/markets/{sport_id}")
 async def get_markets(sport_id: int):
 
@@ -46,7 +46,7 @@ async def get_markets(sport_id: int):
     
     return response.json()
 
-# GET LIST OF LEAGUES
+# Get leagues
 @app.get("/leagues/{sport_id}")
 async def get_leagues(sport_id: int):
 
@@ -64,7 +64,7 @@ async def get_leagues(sport_id: int):
         
     return response.json()
 
-# GET EVENT DETAILS
+# Get event details
 @app.get("/event/{event_id}")
 async def get_event_details(event_id: str):
 
