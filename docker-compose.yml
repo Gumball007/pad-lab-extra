@@ -20,7 +20,20 @@ services:
       - events-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  
+  videos_db:
+    image: postgres:latest
+    container_name: videos_db
+    environment:
+      POSTGRES_USER: ana
+      POSTGRES_PASSWORD: ana
+      POSTGRES_DB: videos
+    volumes:
+      - videos-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
 
 volumes:
   redis-data:
   events-data:
+  videos-data:
