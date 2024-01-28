@@ -1,7 +1,10 @@
 import axios from "axios";
 import express from "express";
+import { rateLimiterUsingThirdParty } from "./middlewares/rateLimiter.js";
 
 const app = express();
+app.use(rateLimiterUsingThirdParty)
+
 const port = 3000;
 
 const logger = (options) => (req, res, next) => {
