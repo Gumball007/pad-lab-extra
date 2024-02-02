@@ -1,8 +1,12 @@
 import axios from "axios";
 import express from "express";
 import { rateLimiterUsingThirdParty } from "./middlewares/rateLimiter.js";
+import timeout from "connect-timeout"
+
+const requestTimeout = process.env.REQUEST_TIMEOUT || '2s'
 
 const app = express();
+
 app.use(rateLimiterUsingThirdParty)
 
 const gatewayPort = 3000;
@@ -43,63 +47,79 @@ app.use(logger({ level: "INFO" }));
 
 // Bet Stats
 
-app.get("/sports", async (req, res) => {
+app.get("/sports", timeout(requestTimeout), async (req, res) => {
   const endpoint = "/sports";
 
   try {
     const response = await axios.get(loadBalancer.getNextServer('betStatsService') + endpoint);
 
-    res.json(response.data);
+    if (!req.timedout) {
+      res.json(response.data);
+    }
   } catch (error) {
-    res.status(500).send("Error fetching sports data");
+    if (!req.timedout) {
+      res.status(500).send("Error fetching sports data");
+    }
   }
 });
 
 
-app.get("/markets/:sport_id", async (req, res) => {
+app.get("/markets/:sport_id", timeout(requestTimeout), async (req, res) => {
   const sportId = req.params.sport_id;
   const endpoint = "/markets";
 
   try {
     const response = await axios.get(loadBalancer.getNextServer('betStatsService') + endpoint + "/" + sportId);
-
-    res.json(response.data);
+    
+    if (!req.timedout) {
+      res.json(response.data);
+    }
   } catch (error) {
-    res.status(500).send("Error fetching market data");
+    if (!req.timedout) {
+      res.status(500).send("Error fetching market data");
+    }
   }
 });
 
 
-app.get('/leagues/:sport_id', async (req, res) => {
+app.get('/leagues/:sport_id', timeout(requestTimeout), async (req, res) => {
   const sportId = req.params.sport_id;
   const endpoint = '/leagues';
 
   try {
       const response = await axios.get(loadBalancer.getNextServer('betStatsService') + endpoint + '/' + sportId)
 
-      res.json(response.data);
+      if (!req.timedout) {
+        res.json(response.data);
+      }
   } catch (error) {
-      res.status(500).send('Error fetching league data');
+      if (!req.timedout) {
+        res.status(500).send('Error fetching league data');
+      }
   }
 });
 
 
-app.get('/event/:event_id', async (req, res) => {
+app.get('/event/:event_id', timeout(requestTimeout), async (req, res) => {
   const eventId = req.params.event_id;
   const endpoint = '/event';
 
   try {
       const response = await axios.get(loadBalancer.getNextServer('betStatsService') + endpoint + '/' + eventId)
 
-      res.json(response.data);
+      if (!req.timedout) {
+        res.json(response.data);
+      }
   } catch (error) {
-      res.status(500).send('Error fetching event details');
+      if (!req.timedout) {
+        res.status(500).send('Error fetching event details');
+      }
   }
 });
 
 // Youtube Integrator
 
-app.get('/search', async (req, res) => {
+app.get('/search', timeout(requestTimeout), async (req, res) => {
   const query = req.query.query;
   const next = req.query.next;
   const endpoint = '/search';
@@ -117,14 +137,18 @@ app.get('/search', async (req, res) => {
           params: params
       });
 
-      res.json(response.data);
+      if (!req.timedout) {
+        res.json(response.data);
+      }
   } catch (error) {
-      res.status(500).send('Error performing YouTube search');
+      if (!req.timedout) {
+        res.status(500).send('Error performing YouTube search');
+      }
   }
 });
 
 
-app.get('/video', async (req, res) => {
+app.get('/video', timeout(requestTimeout), async (req, res) => {
   const videoId = req.query.id;
   const endpoint = '/video';
 
@@ -133,14 +157,18 @@ app.get('/video', async (req, res) => {
           params: { id: videoId }
       });
 
-      res.json(response.data);
+      if (!req.timedout) {
+        res.json(response.data);
+      }
   } catch (error) {
-      res.status(500).send('Error fetching video details');
+      if (!req.timedout) {
+        res.status(500).send('Error fetching video details');
+      }
   }
 });
 
 
-app.get('/video/related', async (req, res) => {
+app.get('/video/related', timeout(requestTimeout), async (req, res) => {
   const videoId = req.query.id;
   const next = req.query.next;
   const endpoint = '/video/related'
@@ -155,15 +183,19 @@ app.get('/video/related', async (req, res) => {
       const response = await axios.get(loadBalancer.getNextServer('youtubeIntegratorService') + endpoint, {
           params: params
       });
-
-      res.json(response.data);
+      
+      if (!req.timedout) {
+        res.json(response.data);
+      }
   } catch (error) {
-      res.status(500).send('Error fetching related video details');
+      if (!req.timedout) {
+        res.status(500).send('Error fetching related video details');
+      }
   }
 });
 
 
-app.get('/video/comments', async (req, res) => {
+app.get('/video/comments', timeout(requestTimeout), async (req, res) => {
   const videoId = req.query.id;
   const next = req.query.next;
   const endpoint = '/video/comments';
@@ -178,15 +210,19 @@ app.get('/video/comments', async (req, res) => {
       const response = await axios.get(loadBalancer.getNextServer('youtubeIntegratorService') + endpoint, {
           params: params
       });
-
-      res.json(response.data);
+      
+      if (!req.timedout) {
+        res.json(response.data);
+      }
   } catch (error) {
-      res.status(500).send('Error fetching video comments');
+      if (!req.timedout) {
+        res.status(500).send('Error fetching video comments');
+      }
   }
 });
 
 
-app.get('/searchPrematchOdds/:eventId', async (req, res) => {
+app.get('/searchPrematchOdds/:eventId', timeout(requestTimeout), async (req, res) => {
   const { eventId } = req.params;
 
   try {
@@ -206,16 +242,20 @@ app.get('/searchPrematchOdds/:eventId', async (req, res) => {
               videoId: video.videoId
           };
       });
-
-      res.json(videoDetails);
+      
+      if (!req.timedout) {
+        res.json(videoDetails);
+      }
   } catch (error) {
       console.error('Error:', error.message);
-      res.status(500).send('Internal Server Error');
+      if (!req.timedout) {
+        res.status(500).send('Internal Server Error');
+      }
   }
 });
 
 
-app.get("/marketsWithVideos/:league_id", async (req, res) => {
+app.get("/marketsWithVideos/:league_id", timeout(requestTimeout), async (req, res) => {
   const { league_id } = req.params;
 
   // Fetch markets from the BetStats service
@@ -259,17 +299,21 @@ app.get("/marketsWithVideos/:league_id", async (req, res) => {
 
     // Wait for all video fetches to resolve
     const marketsWithVideos = await Promise.all(videoPromises);
-    res.json(marketsWithVideos);
+    if (!req.timedout) {
+      res.json(marketsWithVideos);
+    }
   } catch (error) {
     console.error("Error fetching markets with videos:", error.message);
-    res.status(500).send("Error fetching market data and related videos");
+    if (!req.timedout) {
+      res.status(500).send("Error fetching market data and related videos");
+    }
   }
 });
 
 
-app.get('/bettingChannels', async (req, res) => {
+app.get('/bettingChannels', timeout(requestTimeout), async (req, res) => {
   const betStatsServer = loadBalancer.getNextServer('betStatsService');
-
+  console.log(requestTimeout);
   try {
       const sportsResponse = await axios.get(`${betStatsServer}/sports`);
       const sports = sportsResponse.data; 
@@ -307,10 +351,14 @@ app.get('/bettingChannels', async (req, res) => {
       });
 
       const sportsWithChannelsDetails = await Promise.all(sportsPromises);
-      res.json(sportsWithChannelsDetails);
+      if (!req.timedout) {
+        res.json(sportsWithChannelsDetails);
+      }
   } catch (error) {
       console.error('Error fetching channels for sports:', error.message);
-      res.status(500).send('Error fetching channels for sports');
+      if (!req.timedout) {
+        res.status(500).send('Error fetching channels for sports');
+      }
   }
 });
 
