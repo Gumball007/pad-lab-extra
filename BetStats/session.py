@@ -1,7 +1,11 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import os
 
-DATABASE_URL = 'postgresql://ana:ana@localhost:5432/events'
+DB_URL = os.getenv("DB_URL") or 'localhost'
+DB_PORT = os.getenv("DB_PORT") or 5432
+
+DATABASE_URL = f'postgresql://ana:ana@{DB_URL}:{DB_PORT}/events'
 
 engine = create_engine(
     DATABASE_URL

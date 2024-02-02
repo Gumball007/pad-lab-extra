@@ -11,6 +11,7 @@ import os
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
+SELF_PORT = os.getenv('SELF_PORT') or '4000'
 
 def create_tables():
     Base.metadata.create_all(bind=engine)
