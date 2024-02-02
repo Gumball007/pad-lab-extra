@@ -7,6 +7,26 @@ app.use(rateLimiterUsingThirdParty)
 
 const port = 3000;
 
+class LoadBalancer {
+  constructor(services) {
+      this.services = services;
+      this.currentIndex = new Map(services.map(service => [service.name, 0]));
+  }
+
+  getNextServer(serviceName) {
+      const serviceUrls = this.services.find(service => service.name === serviceName).urls;
+      const index = this.currentIndex.get(serviceName);
+      const server = serviceUrls[index % serviceUrls.length];
+      this.currentIndex.set(serviceName, (index + 1) % serviceUrls.length);
+      return server;
+  }
+}
+
+const loadBalancer = new LoadBalancer([
+  { name: 'youtubeIntegratorService', urls: ['http://localhost:5000'] },
+  { name: 'betStatsService', urls: ['http://localhost:4000'] }
+]);
+
 const logger = (options) => (req, res, next) => {
   const timestamp = new Date().toISOString();
   const { method, url, ip } = req;
@@ -164,6 +184,38 @@ app.get('/video/comments', async (req, res) => {
       res.json(response.data);
   } catch (error) {
       res.status(500).send('Error fetching video comments');
+  }
+});
+
+
+app.get('/aggregateVideos/:eventId', async (req, res) => {
+  const { eventId } = req.params;
+
+  try {
+      const youtubeServer = loadBalancer.getNextServer('youtubeIntegratorService');
+      const betStatsServer = loadBalancer.getNextServer('betStatsService');    
+
+      // Fetch event details from BetStats service
+      const eventDetailsResponse = await axios.get(`${betStatsServer}/event/${eventId}`);
+      const event = eventDetailsResponse.data.events[0];
+      const searchQuery = `${event.home} vs ${event.away} betting odds`;
+
+      // Fetch related videos from YouTubeIntegrator service
+      const videosResponse = await axios.get(`${youtubeServer}/search`, { params: { query: searchQuery } });
+      const videos = videosResponse.data.contents;
+
+      // Extract titles and videoIds
+      const videoDetails = videos.map(({ video }) => {
+          return {
+              title: video.title,
+              videoId: video.videoId
+          };
+      });
+
+      res.json(videoDetails);
+  } catch (error) {
+      console.error('Error:', error.message);
+      res.status(500).send('Internal Server Error');
   }
 });
 
