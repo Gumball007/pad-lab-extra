@@ -5,6 +5,7 @@ from models import Event
 from sqlalchemy.orm import Session
 from session import get_db, engine
 from models import Base
+from prometheus_fastapi_instrumentator import Instrumentator
 import httpx
 import os
 
@@ -20,6 +21,8 @@ def start_application():
     return app
 
 app = start_application()
+
+Instrumentator().instrument(app).expose(app)
 
 # Get sports
 @app.get("/sports")

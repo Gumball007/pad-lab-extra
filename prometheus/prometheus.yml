@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 5s 
+
+scrape_configs:
+  - job_name: 'gateway'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.internal.docker:6000'] 
+        labels:
+          application: 'Gateway'
+
+  - job_name: 'betstats'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.internal.docker:4000']  
+        labels:
+          application: 'BetStats'
+
+  - job_name: 'youtubeservice'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.internal.docker:5000'] 
+        labels:
+          application: 'YoutubeIntegratorService'

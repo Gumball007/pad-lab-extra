@@ -3,12 +3,25 @@ import express from "express";
 import { rateLimiterUsingThirdParty } from "./middlewares/rateLimiter.js";
 import timeout from "connect-timeout";
 import Redis from "ioredis";
+import promBundle from 'express-prom-bundle'
 
 const requestTimeout = process.env.REQUEST_TIMEOUT || "4s";
-const gatewayPort = process.env.GATEWAY_PORT || 3000;
+const gatewayPort = process.env.GATEWAY_PORT || 6000;
 const app = express();
+const metricsMiddleware = promBundle({
+  includeMethod: true, 
+  includePath: true, 
+  includeStatusCode: true, 
+  includeUp: true,
+  customLabels: {project_name: 'hello_world', project_type: 'test_metrics_labels'},
+  promClient: {
+      collectDefaultMetrics: {
+      }
+    }
+});
 
 app.use(rateLimiterUsingThirdParty);
+app.use(metricsMiddleware);
 
 const redis = new Redis();
 

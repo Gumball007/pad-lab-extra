@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from models import Base, Video
 from sqlalchemy.orm import Session
 from session import get_db, engine
+from prometheus_fastapi_instrumentator import Instrumentator
 import httpx
 import os
 
@@ -19,6 +20,8 @@ def start_application():
     return app
 
 app = start_application()
+
+Instrumentator().instrument(app).expose(app)
 
 # Search for youtube video
 @app.get("/search")
