@@ -7,10 +7,18 @@ from session import get_db, engine
 from prometheus_fastapi_instrumentator import Instrumentator
 import httpx
 import os
+import logging
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 SELF_PORT = os.getenv('SELF_PORT') or '4000'
+
+class EndpointFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.getMessage().find("/metrics") == -1
+
+# Filter out /metrics
+logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 
 def create_tables():
     Base.metadata.create_all(bind=engine)
