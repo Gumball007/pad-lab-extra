@@ -47,8 +47,10 @@ async def get_markets(sport_id: int, event_type: str = 'prematch', league_ids: i
         'sport_id': sport_id,
         'is_have_odds': 'true',
         'event_type': event_type,
-        'league_ids': league_ids
     }
+
+    if league_ids:
+        params['league_ids'] = league_ids
     
     headers = {
         'X-RapidAPI-Key': API_KEY,
