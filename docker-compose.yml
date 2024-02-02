@@ -35,6 +35,8 @@ services:
     environment:
       - REQUEST_TIMEOUT=4s
       - REDIS_HOST=redis
+      - TIME_WINDOW=60
+      - MAX_TASKS=100
     depends_on:
       - youtubeservice-1
       - betstats-1
