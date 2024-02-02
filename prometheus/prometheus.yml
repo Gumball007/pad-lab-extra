@@ -5,20 +5,20 @@ scrape_configs:
   - job_name: 'gateway'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['host.internal.docker:6000'] 
+      - targets: ['gateway:6000'] 
         labels:
           application: 'Gateway'
 
   - job_name: 'betstats'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['host.internal.docker:4000']  
+      - targets: ['betstats-1:4000']  
         labels:
           application: 'BetStats'
 
   - job_name: 'youtubeservice'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['host.internal.docker:5000'] 
+      - targets: ['youtubeservice-1:5000'] 
         labels:
           application: 'YoutubeIntegratorService'

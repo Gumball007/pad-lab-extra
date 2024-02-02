@@ -7,7 +7,9 @@ import promBundle from 'express-prom-bundle'
 
 const requestTimeout = process.env.REQUEST_TIMEOUT || "4s";
 const gatewayPort = process.env.GATEWAY_PORT || 6000;
+const redisHost = process.env.REDIS_HOST || "localhost";
 const app = express();
+
 const metricsMiddleware = promBundle({
   includeMethod: true, 
   includePath: true, 
@@ -22,7 +24,7 @@ const metricsMiddleware = promBundle({
 app.use(rateLimiterUsingThirdParty);
 app.use(metricsMiddleware);
 
-const redis = new Redis();
+const redis = new Redis(6379, redisHost);
 
 class LoadBalancer {
   constructor(services) {
@@ -37,13 +39,14 @@ class LoadBalancer {
     const index = this.currentIndex.get(serviceName);
     const server = serviceUrls[index % serviceUrls.length];
     this.currentIndex.set(serviceName, (index + 1) % serviceUrls.length);
+    console.info(`Server : ${server}`)
     return server;
   }
 }
 
 const loadBalancer = new LoadBalancer([
-  { name: "youtubeIntegratorService", urls: ["http://localhost:5000"] },
-  { name: "betStatsService", urls: ["http://localhost:4000"] },
+  { name: "youtubeIntegratorService", urls: ["http://youtubeservice-1:5000"] },
+  { name: "betStatsService", urls: ["http://betstats-1:4000"] },
 ]);
 
 const logger = (options) => (req, res, next) => {
