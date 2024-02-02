@@ -39,14 +39,15 @@ async def get_sports():
 
 # Get markets
 @app.get("/markets/{sport_id}")
-async def get_markets(sport_id: int):
+async def get_markets(sport_id: int, event_type: str = 'prematch', league_ids: int = None):
 
     url = 'https://pinnacle-odds.p.rapidapi.com/kit/v1/markets'
     
     params = {
         'sport_id': sport_id,
         'is_have_odds': 'true',
-        'event_type': 'prematch'
+        'event_type': event_type,
+        'league_ids': league_ids
     }
     
     headers = {

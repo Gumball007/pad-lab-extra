@@ -22,14 +22,14 @@ app = start_application()
 
 # Search for youtube video
 @app.get("/search")
-async def youtube_search(query: str, next: str = None):
+async def youtube_search(query: str, next: str = None, type: str = None):
 
     url = 'https://youtube-search-and-download.p.rapidapi.com/search'
 
     params = {
         'query': query,
         'hl': 'en',
-        'type': 'v',
+        'type': type,
         'features': 'hd',
         'sort': 'r'
     }
@@ -49,7 +49,7 @@ async def youtube_search(query: str, next: str = None):
 
 # Get video info
 @app.get("/video")
-async def youtube_search(video_id: str, db: Session = Depends(get_db)):
+async def get_video_info(video_id: str, db: Session = Depends(get_db)):
 
     url = 'https://youtube-search-and-download.p.rapidapi.com/video'
 
@@ -97,7 +97,7 @@ async def youtube_search(video_id: str, db: Session = Depends(get_db)):
 
 # Get video related
 @app.get("/video/related")
-async def youtube_search(video_id: str, next: str = None):
+async def get_video_related(video_id: str, next: str = None):
 
     url = 'https://youtube-search-and-download.p.rapidapi.com/video/related'
 
@@ -118,18 +118,15 @@ async def youtube_search(video_id: str, next: str = None):
 
     return response.json()
 
-# Get video comments
-@app.get("/video/comments")
-async def youtube_search(video_id: str, next: str = None):
+# Get channel info
+@app.get("/channel")
+async def get_channel_info(channel_id: str):
 
-    url = 'https://youtube-search-and-download.p.rapidapi.com/video/comments'
+    url = 'https://youtube-search-and-download.p.rapidapi.com/channel/about'
 
     params = {
-        'id': video_id,
+        'id': channel_id,
     }
-
-    if next:
-        params['next'] = next
 
     headers = {
         'X-RapidAPI-Key': API_KEY,
