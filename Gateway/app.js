@@ -60,8 +60,8 @@ class LoadBalancer {
 }
 
 const loadBalancer = new LoadBalancer([
-  { name: "youtubeIntegratorService", urls: ["http://youtubeservice-1:5000"] },
-  { name: "betStatsService", urls: ["http://betstats-1:4000"] },
+  { name: "youtubeIntegratorService", urls: ["http://youtubeservice-1:5000", "http://youtubeservice-2:5001", "http://youtubeservice-3:5002"] },
+  { name: "betStatsService", urls: ["http://betstats-1:4000", "http://betstats-2:4001", "http://betstats-3:4002"] },
 ]);
 
 const logger = (options) => (req, res, next) => {
