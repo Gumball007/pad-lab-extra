@@ -3,10 +3,12 @@ import express from "express";
 import { rateLimiterUsingThirdParty } from "./middlewares/rateLimiter.js";
 import timeout from "connect-timeout";
 import Redis from "ioredis";
-import promBundle from 'express-prom-bundle'
+import promBundle from "express-prom-bundle"
+import swaggerJsdoc from "swagger-jsdoc"
+import swaggerUi from "swagger-ui-express"
 
 const requestTimeout = process.env.REQUEST_TIMEOUT || "4s";
-const gatewayPort = process.env.GATEWAY_PORT || 6000;
+const gatewayPort = process.env.GATEWAY_PORT || 7000;
 const redisHost = process.env.REDIS_HOST || "localhost";
 const app = express();
 
@@ -21,8 +23,21 @@ const metricsMiddleware = promBundle({
     }
 });
 
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Express API with Swagger',
+      version: '1.0.0'
+    }
+  },
+  apis: ['./app.js'] 
+}
+const specs = swaggerJsdoc(options);
+
 app.use(rateLimiterUsingThirdParty);
 app.use(metricsMiddleware);
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs))
 
 const redis = new Redis(6379, redisHost);
 
@@ -64,6 +79,30 @@ app.use(logger({ level: "INFO" }));
 
 // Bet Stats
 
+/**
+ * @swagger
+ * /sports:
+ *   get:
+ *     summary: Get list of sports
+ *     responses:
+ *       200:
+ *         description: A list of sports, potentially served from cache.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 fromCache:
+ *                   type: boolean
+ *                   description: Indicates if the data was served from cache.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     description: Sport data object, structure may vary.
+ *       500:
+ *         description: Error fetching sports data.
+ */
 app.get("/sports", timeout(requestTimeout), async (req, res) => {
   const endpoint = "/sports";
   let isCached = false;
@@ -95,6 +134,37 @@ app.get("/sports", timeout(requestTimeout), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /markets/{sport_id}:
+ *   get:
+ *     summary: Get market data for a specific sport
+ *     parameters:
+ *       - in: path
+ *         name: sport_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The unique identifier for the sport to fetch markets for.
+ *     responses:
+ *       200:
+ *         description: Market data for the specified sport, potentially served from cache.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 fromCache:
+ *                   type: boolean
+ *                   description: Indicates if the data was served from cache.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     description: Market data object for the sport, structure may vary.
+ *       500:
+ *         description: Error fetching market data.
+ */
 app.get("/markets/:sport_id", timeout(requestTimeout), async (req, res) => {
   const sportId = req.params.sport_id;
   const endpoint = "/markets";
@@ -127,6 +197,37 @@ app.get("/markets/:sport_id", timeout(requestTimeout), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /leagues/{sport_id}:
+ *   get:
+ *     summary: Get league data for a specific sport
+ *     parameters:
+ *       - in: path
+ *         name: sport_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The unique identifier for the sport to fetch leagues for.
+ *     responses:
+ *       200:
+ *         description: League data for the specified sport, potentially served from cache.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 fromCache:
+ *                   type: boolean
+ *                   description: Indicates if the data was served from cache.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     description: League data object for the sport, structure may vary.
+ *       500:
+ *         description: Error fetching league data.
+ */
 app.get("/leagues/:sport_id", timeout(requestTimeout), async (req, res) => {
   const sportId = req.params.sport_id;
   const endpoint = "/leagues";
@@ -159,6 +260,35 @@ app.get("/leagues/:sport_id", timeout(requestTimeout), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /event/{event_id}:
+ *   get:
+ *     summary: Get details for a specific event
+ *     parameters:
+ *       - in: path
+ *         name: event_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique identifier for the event to fetch details for.
+ *     responses:
+ *       200:
+ *         description: Event details for the specified event, potentially served from cache.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 fromCache:
+ *                   type: boolean
+ *                   description: Indicates if the data was served from cache.
+ *                 data:
+ *                   type: object
+ *                   description: Event details object, structure may vary.
+ *       500:
+ *         description: Error fetching event details.
+ */
 app.get("/event/:event_id", timeout(requestTimeout), async (req, res) => {
   const eventId = req.params.event_id;
   const endpoint = "/event";
@@ -193,6 +323,42 @@ app.get("/event/:event_id", timeout(requestTimeout), async (req, res) => {
 
 // Youtube Integrator
 
+/**
+ * @swagger
+ * /search:
+ *   get:
+ *     summary: Perform a YouTube search
+ *     parameters:
+ *       - in: query
+ *         name: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The search query to perform.
+ *       - in: query
+ *         name: next
+ *         schema:
+ *           type: string
+ *         description: Token for fetching the next page of results.
+ *     responses:
+ *       200:
+ *         description: Search results, potentially served from cache.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 fromCache:
+ *                   type: boolean
+ *                   description: Indicates if the data was served from cache.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     description: Search result item, structure may vary.
+ *       500:
+ *         description: Error performing YouTube search.
+ */
 app.get("/search", timeout(requestTimeout), async (req, res) => {
   const query = req.query.query;
   const next = req.query.next;
@@ -238,6 +404,35 @@ app.get("/search", timeout(requestTimeout), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /video:
+ *   get:
+ *     summary: Get details for a specific video
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique identifier for the video to fetch details for.
+ *     responses:
+ *       200:
+ *         description: Video details, potentially served from cache.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 fromCache:
+ *                   type: boolean
+ *                   description: Indicates if the data was served from cache.
+ *                 data:
+ *                   type: object
+ *                   description: Video details object, structure may vary.
+ *       500:
+ *         description: Error fetching video details.
+ */
 app.get("/video", timeout(requestTimeout), async (req, res) => {
   const videoId = req.query.id;
   const endpoint = "/video";
@@ -274,6 +469,42 @@ app.get("/video", timeout(requestTimeout), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /video/related:
+ *   get:
+ *     summary: Get related videos for a specific video
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique identifier of the video to fetch related videos for.
+ *       - in: query
+ *         name: next
+ *         schema:
+ *           type: string
+ *         description: Token for fetching the next page of related videos.
+ *     responses:
+ *       200:
+ *         description: Related videos, potentially served from cache.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 fromCache:
+ *                   type: boolean
+ *                   description: Indicates if the data was served from cache.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     description: Related video object, structure may vary.
+ *       500:
+ *         description: Error fetching related video details.
+ */
 app.get("/video/related", timeout(requestTimeout), async (req, res) => {
   const videoId = req.query.id;
   const next = req.query.next;
@@ -317,6 +548,35 @@ app.get("/video/related", timeout(requestTimeout), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /channel:
+ *   get:
+ *     summary: Get information for a specific YouTube channel
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique identifier of the channel to fetch information for.
+ *     responses:
+ *       200:
+ *         description: Channel information, potentially served from cache.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 fromCache:
+ *                   type: boolean
+ *                   description: Indicates if the data was served from cache.
+ *                 data:
+ *                   type: object
+ *                   description: Channel information object, structure may vary.
+ *       500:
+ *         description: Error fetching channel info.
+ */
 app.get("/channel", timeout(requestTimeout), async (req, res) => {
   const channelId = req.query.id;
   const endpoint = "/channel";
@@ -359,6 +619,46 @@ app.get("/channel", timeout(requestTimeout), async (req, res) => {
   }
 });
 
+// Aggregation endpoints
+
+/**
+ * @swagger
+ * /searchPrematchOdds/{eventId}:
+ *   get:
+ *     summary: Search for prematch odds and related YouTube videos for an event
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique identifier of the event to search for prematch odds and related videos.
+ *     responses:
+ *       200:
+ *         description: Prematch odds and related videos, potentially served from cache.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 fromCache:
+ *                   type: boolean
+ *                   description: Indicates if the data was served from cache.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       title:
+ *                         type: string
+ *                         description: The title of the video.
+ *                       videoId:
+ *                         type: string
+ *                         description: The unique identifier for the video.
+ *                   description: An array of objects, each representing a related video with title and videoId.
+ *       500:
+ *         description: Internal Server Error.
+ */
 app.get(
   "/searchPrematchOdds/:eventId",
   timeout(requestTimeout),
@@ -416,6 +716,64 @@ app.get(
   }
 );
 
+/**
+ * @swagger
+ * /marketsWithVideos/{leagueId}:
+ *   get:
+ *     summary: Fetch market information and related YouTube videos for a specific league
+ *     parameters:
+ *       - in: path
+ *         name: leagueId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique identifier of the league to fetch market information and related videos for.
+ *     responses:
+ *       200:
+ *         description: Market information and related videos, potentially served from cache.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 fromCache:
+ *                   type: boolean
+ *                   description: Indicates if the data was served from cache.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       event_id:
+ *                         type: string
+ *                         description: The unique identifier of the event.
+ *                       league_name:
+ *                         type: string
+ *                         description: The name of the league.
+ *                       starts:
+ *                         type: string
+ *                         description: The start time of the event.
+ *                       home:
+ *                         type: string
+ *                         description: The home team name.
+ *                       away:
+ *                         type: string
+ *                         description: The away team name.
+ *                       videos:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             title:
+ *                               type: string
+ *                               description: The title of the video.
+ *                             videoId:
+ *                               type: string
+ *                               description: The unique identifier for the video.
+ *                         description: A list of related videos.
+ *       500:
+ *         description: Error fetching market data and related videos.
+ */
 app.get(
   "/marketsWithVideos/:leagueId",
   timeout(requestTimeout),
@@ -493,6 +851,54 @@ app.get(
   }
 );
 
+/**
+ * @swagger
+ * /bettingChannels:
+ *   get:
+ *     summary: Fetch YouTube channel information relevant to betting for various sports
+ *     responses:
+ *       200:
+ *         description: YouTube channel information for betting, potentially served from cache.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 fromCache:
+ *                   type: boolean
+ *                   description: Indicates if the data was served from cache.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       sport:
+ *                         type: string
+ *                         description: The name of the sport.
+ *                       channel:
+ *                         type: object
+ *                         properties:
+ *                           title:
+ *                             type: string
+ *                             description: The title of the channel.
+ *                           channelId:
+ *                             type: string
+ *                             description: The unique identifier for the channel.
+ *                           channelUrl:
+ *                             type: string
+ *                             description: The URL to the channel.
+ *                           subscriberCount:
+ *                             type: string
+ *                             description: Textual representation of the subscriber count.
+ *                           viewCount:
+ *                             type: string
+ *                             description: Textual representation of the view count.
+ *                           joinedDate:
+ *                             type: string
+ *                             description: Textual representation of the date the channel joined YouTube.
+ *       500:
+ *         description: Error fetching channels for sports.
+ */
 app.get("/bettingChannels", timeout(requestTimeout), async (req, res) => {
   let isCached = false;
   let results;
@@ -563,6 +969,24 @@ app.get("/bettingChannels", timeout(requestTimeout), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /status:
+ *   get:
+ *     summary: Check the status of the service
+ *     responses:
+ *       200:
+ *         description: The status of the service.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   description: The operational status of the service.
+ *                   example: "OK"
+ */
 app.get("/status", (req, res) => {
   res.json({ status: "OK" });
 });
