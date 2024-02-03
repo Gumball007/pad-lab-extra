@@ -2,7 +2,7 @@ version: '3.8'
 services:
 
   betstats-1:
-    image: betstats
+    image: gumball7/betstats
     container_name: betstats-1
     ports:
       - "4000:4000"
@@ -15,7 +15,7 @@ services:
       - redis
 
   youtubeservice-1:
-    image: youtubeservice
+    image: gumball7/youtubeservice
     container_name: youtubeservice-1
     ports:
       - "5000:5000"
@@ -28,10 +28,10 @@ services:
       - redis
 
   gateway:
-    image: gateway
+    image: gumball7/gateway
     container_name: gateway
     ports:
-      -7000:7000"
+      - "7000:7000"
     environment:
       - REQUEST_TIMEOUT=4s
       - REDIS_HOST=redis

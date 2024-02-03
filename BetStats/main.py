@@ -52,7 +52,6 @@ async def get_sports():
 # Get markets
 @app.get("/markets/{sport_id}")
 async def get_markets(sport_id: int, event_type: str = 'prematch', league_ids: int = None):
-
     url = 'https://pinnacle-odds.p.rapidapi.com/kit/v1/markets'
     
     params = {
@@ -65,14 +64,40 @@ async def get_markets(sport_id: int, event_type: str = 'prematch', league_ids: i
         params['league_ids'] = league_ids
     
     headers = {
-        'X-RapidAPI-Key': API_KEY,
+        'X-RapidAPI-Key': API_KEY, 
         'X-RapidAPI-Host': 'pinnacle-odds.p.rapidapi.com'
     }
 
     async with httpx.AsyncClient() as client:
         response = await client.get(url, params=params, headers=headers)
-    
-    return response.json()
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail="Error fetching data from the external API")
+
+    data = response.json()
+
+    # Filter events to only include the required fields
+    filtered_events = [
+        {
+            "event_id": event["event_id"],
+            "league_id": event["league_id"],
+            "league_name": event["league_name"],
+            "starts": event["starts"],
+            "home": event["home"],
+            "away": event["away"],
+            "event_type": event["event_type"],
+        }
+        for event in data.get("events", [])
+    ]
+
+    # Construct a new response that includes only the filtered events
+    new_response = {
+        "sport_id": data["sport_id"],
+        "sport_name": data["sport_name"],
+        "events": filtered_events
+    }
+
+    return new_response
 
 # Get leagues
 @app.get("/leagues/{sport_id}")

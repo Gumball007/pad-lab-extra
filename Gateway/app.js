@@ -728,6 +728,12 @@ app.get(
  *         schema:
  *           type: string
  *         description: The unique identifier of the league to fetch market information and related videos for.
+ *       - in: query
+ *         name: sportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique identifier of the sport to fetch market information for.
  *     responses:
  *       200:
  *         description: Market information and related videos, potentially served from cache.
@@ -779,18 +785,19 @@ app.get(
   timeout(requestTimeout),
   async (req, res) => {
     const { leagueId } = req.params;
+    const { sportId } = req.query; // Retrieve sportId from query parameters
     let isCached = false;
     let results;
 
     // Fetch markets from the BetStats service
     try {
-      const cacheResults = await redis.get(`markets-videos:${leagueId}`);
+      const cacheResults = await redis.get(`markets-videos:${leagueId}:${sportId}`);
       if (cacheResults) {
         isCached = true;
         results = JSON.parse(cacheResults);
       } else {
         const marketResponse = await axios.get(
-          `${loadBalancer.getNextServer("betStatsService")}/markets/1`,
+          `${loadBalancer.getNextServer("betStatsService")}/markets/${sportId}`,
           {
             params: {
               league_ids: leagueId,
@@ -801,7 +808,7 @@ app.get(
 
         const markets = marketResponse.data.events;
         const videoPromises = markets.map(async (market) => {
-          const searchQuery = `${market.home} vs ${market.away} in UEFA Champions League predictions`;
+          const searchQuery = `${market.home} vs ${market.away} predictions tips`;
           const youtubeServer = loadBalancer.getNextServer(
             "youtubeIntegratorService"
           );
@@ -812,7 +819,6 @@ app.get(
           });
           const videos = videosResponse.data.contents.slice(0, 3); // Limit to first 3 videos
 
-          // Map to the desired format
           return {
             event_id: market.event_id,
             league_name: market.league_name,
@@ -826,11 +832,10 @@ app.get(
           };
         });
 
-        // Wait for all video fetches to resolve
         results = await Promise.all(videoPromises);
 
         await redis.setex(
-          `markets-videos:${leagueId}`,
+          `markets-videos:${leagueId}:${sportId}`,
           120,
           JSON.stringify(results)
         );
@@ -843,13 +848,9 @@ app.get(
         });
       }
     } catch (error) {
-      console.error("Error fetching markets with videos:", error.message);
-      if (!req.timedout) {
-        res.status(500).send("Error fetching market data and related videos");
-      }
+      console.error("Error fetching markets with videos:", error)
     }
-  }
-);
+});
 
 /**
  * @swagger
