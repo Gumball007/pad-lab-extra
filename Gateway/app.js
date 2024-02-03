@@ -64,6 +64,11 @@ const loadBalancer = new LoadBalancer([
   { name: "betStatsService", urls: ["http://betstats-1:4000", "http://betstats-2:4001", "http://betstats-3:4002"] },
 ]);
 
+// const loadBalancer = new LoadBalancer([
+//   { name: "youtubeIntegratorService", urls: ["http://localhost:5000"] },
+//   { name: "betStatsService", urls: ["http://localhost:4000"] }
+// ]);
+
 const logger = (options) => (req, res, next) => {
   const timestamp = new Date().toISOString();
   const { method, url, ip } = req;
@@ -411,7 +416,7 @@ app.get("/search", timeout(requestTimeout), async (req, res) => {
  *     summary: Get details for a specific video
  *     parameters:
  *       - in: query
- *         name: id
+ *         name: video_id
  *         required: true
  *         schema:
  *           type: string
@@ -434,13 +439,13 @@ app.get("/search", timeout(requestTimeout), async (req, res) => {
  *         description: Error fetching video details.
  */
 app.get("/video", timeout(requestTimeout), async (req, res) => {
-  const videoId = req.query.id;
+  const video_id = req.query.video_id;
   const endpoint = "/video";
   let isCached = false;
   let results;
 
   try {
-    const cacheResults = await redis.get(`${endpoint}:${videoId}`);
+    const cacheResults = await redis.get(`${endpoint}:${video_id}`);
     if (cacheResults) {
       isCached = true;
       results = JSON.parse(cacheResults);
@@ -448,12 +453,12 @@ app.get("/video", timeout(requestTimeout), async (req, res) => {
       const response = await axios.get(
         loadBalancer.getNextServer("youtubeIntegratorService") + endpoint,
         {
-          params: { id: videoId },
+          params: { video_id: video_id },
         }
       );
 
       results = response.data;
-      await redis.setex(`${endpoint}:${videoId}`, 120, JSON.stringify(results));
+      await redis.setex(`${endpoint}:${video_id}`, 120, JSON.stringify(results));
     }
 
     if (!req.timedout) {
@@ -476,7 +481,7 @@ app.get("/video", timeout(requestTimeout), async (req, res) => {
  *     summary: Get related videos for a specific video
  *     parameters:
  *       - in: query
- *         name: id
+ *         name: video_id
  *         required: true
  *         schema:
  *           type: string
@@ -506,20 +511,20 @@ app.get("/video", timeout(requestTimeout), async (req, res) => {
  *         description: Error fetching related video details.
  */
 app.get("/video/related", timeout(requestTimeout), async (req, res) => {
-  const videoId = req.query.id;
+  const video_id = req.query.video_id;
   const next = req.query.next;
   const endpoint = "/video/related";
   let isCached = false;
   let results;
 
-  const params = { id: videoId };
+  const params = { video_id: video_id };
 
   if (next) {
     params["next"] = next;
   }
 
   try {
-    const cacheResults = await redis.get(`${endpoint}:${videoId}`);
+    const cacheResults = await redis.get(`${endpoint}:${video_id}`);
     if (cacheResults) {
       isCached = true;
       results = JSON.parse(cacheResults);
@@ -532,7 +537,7 @@ app.get("/video/related", timeout(requestTimeout), async (req, res) => {
       );
 
       results = response.data;
-      await redis.setex(`${endpoint}:${videoId}`, 120, JSON.stringify(results));
+      await redis.setex(`${endpoint}:${video_id}`, 120, JSON.stringify(results));
     }
 
     if (!req.timedout) {
@@ -555,7 +560,7 @@ app.get("/video/related", timeout(requestTimeout), async (req, res) => {
  *     summary: Get information for a specific YouTube channel
  *     parameters:
  *       - in: query
- *         name: id
+ *         name: channel_id
  *         required: true
  *         schema:
  *           type: string
@@ -578,15 +583,15 @@ app.get("/video/related", timeout(requestTimeout), async (req, res) => {
  *         description: Error fetching channel info.
  */
 app.get("/channel", timeout(requestTimeout), async (req, res) => {
-  const channelId = req.query.id;
+  const channel_id = req.query.channel_id;
   const endpoint = "/channel";
   let isCached = false;
   let results;
 
-  const params = { id: channelId };
+  const params = { channel_id: channel_id };
 
   try {
-    const cacheResults = await redis.get(`${endpoint}:${channelId}`);
+    const cacheResults = await redis.get(`${endpoint}:${channel_id}`);
     if (cacheResults) {
       isCached = true;
       results = JSON.parse(cacheResults);
@@ -599,8 +604,9 @@ app.get("/channel", timeout(requestTimeout), async (req, res) => {
       );
 
       results = response.data;
+
       await redis.setex(
-        `${endpoint}:${channelId}`,
+        `${endpoint}:${channel_id}`,
         120,
         JSON.stringify(results)
       );

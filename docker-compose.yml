@@ -85,7 +85,7 @@ services:
     ports:
       - "7000:7000"
     environment:
-      - REQUEST_TIMEOUT=4s
+      - REQUEST_TIMEOUT=6s
       - REDIS_HOST=redis
       - TIME_WINDOW=60
       - MAX_TASKS=100

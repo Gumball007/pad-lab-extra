@@ -5,20 +5,20 @@ scrape_configs:
   - job_name: 'gateway'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['gateway:6000'] 
+      - targets: ['gateway:7000'] 
         labels:
           application: 'Gateway'
 
   - job_name: 'betstats'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['betstats-1:4000']  
+      - targets: ['betstats-1:4000', 'betstats-2:4001', 'betstats-3:4002']  
         labels:
           application: 'BetStats'
 
   - job_name: 'youtubeservice'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['youtubeservice-1:5000'] 
+      - targets: ['youtubeservice-1:5000', 'youtubeservice-2:5001', 'youtubeservice-3:5002'] 
         labels:
           application: 'YoutubeIntegratorService'
