@@ -19,6 +19,6 @@ scrape_configs:
   - job_name: 'youtubeservice'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['youtubeservice-1:5000', 'youtubeservice-2:5001', 'youtubeservice-3:5002'] 
+      - targets: ['youtubeservice-1:5003', 'youtubeservice-2:5001', 'youtubeservice-3:5002'] 
         labels:
           application: 'YoutubeIntegratorService'

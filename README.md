@@ -107,6 +107,6 @@ Be sure to select prometheus datasource before creating these dashboards.
 ### Swagger
 
 API models are created using Swagger. Every service has its `/docs` endpoint :
-    - YoutubeIntegrator : `localhost:5000/docs`
+    - YoutubeIntegrator : `localhost:5001/docs`
     - BetStats : `localhost:4000/docs`
     - Gateway : `localhost:7000/docs`

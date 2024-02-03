@@ -2,7 +2,7 @@ version: '3.8'
 services:
 
   betstats-1:
-    image: gumball7/betstats
+    image: gumball7/betstats:latest
     container_name: betstats-1
     ports:
       - "4000:4000"
@@ -15,7 +15,7 @@ services:
       - redis
   
   betstats-2:
-    image: gumball7/betstats
+    image: gumball7/betstats:latest
     container_name: betstats-2
     ports:
       - "4001:4001"
@@ -28,7 +28,7 @@ services:
       - redis
 
   betstats-3:
-    image: gumball7/betstats
+    image: gumball7/betstats:latest
     container_name: betstats-3
     ports:
       - "4002:4002"
@@ -41,12 +41,12 @@ services:
       - redis
 
   youtubeservice-1:
-    image: gumball7/youtubeservice
+    image: gumball7/youtubeservice:latest
     container_name: youtubeservice-1
     ports:
-      - "5000:5000"
+      - "5003:5003"
     environment:
-      - SELF_PORT=5000
+      - SELF_PORT=5003
       - DB_URL=videos_db
       - DB_PORT=5432
     depends_on:
@@ -54,7 +54,7 @@ services:
       - redis
   
   youtubeservice-2:
-    image: gumball7/youtubeservice
+    image: gumball7/youtubeservice:latest
     container_name: youtubeservice-2
     ports:
       - "5001:5001"
@@ -67,7 +67,7 @@ services:
       - redis
 
   youtubeservice-3:
-    image: gumball7/youtubeservice
+    image: gumball7/youtubeservice:latest
     container_name: youtubeservice-3
     ports:
       - "5002:5002"
@@ -80,11 +80,12 @@ services:
       - redis
 
   gateway:
-    image: gumball7/gateway
+    image: gumball7/gateway:latest
     container_name: gateway
     ports:
-      - "7000:7000"
+      - "8000:8000"
     environment:
+      - GATEWAY_PORT=8000
       - REQUEST_TIMEOUT=6s
       - REDIS_HOST=redis
       - TIME_WINDOW=60
